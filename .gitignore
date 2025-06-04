@@ -1,0 +1,42 @@
+# pycache
+__pycache__/
+
+# Python bytecode files
+*.py[cod]
+
+# Distribution / packaging
+dist/
+build/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE specific files
+.idea/
+.vscode/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Model checkpoints and data
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+
+# Logs and temporary files
+logs/
+*.log
+tmp/
+temp/
+
+# Environment variables
+.env
+.env.local
+
+# Ignore specific files related to Grad-TTS inference
+Grad-TTS/inference.ipynb
+Grad-TTS/resources/filelists/synthesis.txt
+Grad-TTS/model/monotonic_align/core.c
+*.wav

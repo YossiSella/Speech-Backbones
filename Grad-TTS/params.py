@@ -10,9 +10,9 @@ from model.utils import fix_len_compatibility
 
 
 # data parameters
-train_filelist_path = 'resources/filelists/ljspeech/train.txt'
-valid_filelist_path = 'resources/filelists/ljspeech/valid.txt'
-test_filelist_path = 'resources/filelists/ljspeech/test.txt'
+train_filelist_path = 'resources/filelists/ljspeech/train_fixed.txt'
+valid_filelist_path = 'resources/filelists/ljspeech/valid_fixed.txt'
+test_filelist_path = 'resources/filelists/ljspeech/test_fixed.txt'
 cmudict_path = 'resources/cmu_dictionary'
 add_blank = True
 n_feats = 80
@@ -43,7 +43,7 @@ beta_max = 20.0
 pe_scale = 1000  # 1 for `grad-tts-old.pt` checkpoint
 
 # training parameters
-log_dir = 'logs/new_exp'
+log_dir = 'logs/training_exp1_11.6.25'
 test_size = 4
 n_epochs = 10000
 batch_size = 16

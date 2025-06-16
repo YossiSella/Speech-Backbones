@@ -31,6 +31,9 @@ batch_size = params.batch_size
 out_size = params.out_size
 learning_rate = params.learning_rate
 random_seed = params.seed
+resume_checkpoint_path = params.resume_checkpoint_path  # e.g., 'logs/training_exp1_11.6.25/grad_20.pt'
+resume_epoch = params.resume_epoch  # e.g., 20
+
 
 nsymbols = len(symbols) + 1 if add_blank else len(symbols)
 n_enc_channels = params.n_enc_channels
@@ -96,7 +99,50 @@ if __name__ == "__main__":
 
     print('Start training...')
     iteration = 0
-    for epoch in range(1, n_epochs + 1):
+    start_epoch = 1
+
+    if resume_checkpoint_path:
+        print(f"Resuming from checkpoint: {resume_checkpoint_path}")
+        checkpoint = torch.load(resume_checkpoint_path)
+        
+        # Load model state
+        if isinstance(checkpoint, dict) and 'model' in checkpoint:
+            model.load_state_dict(checkpoint['model'])
+            print("Model weights loaded.")
+
+            # Try to load optimizer state
+            if 'optimizer' in checkpoint:
+                try:
+                    optimizer.load_state_dict(checkpoint['optimizer'])
+                    print("Optimizer state loaded.")
+                except Exception as e:
+                    print(f"Warning: Failed to load optimizer state. Reason: {e}")
+            else:
+                print("No optimizer state found in checkpoint. Continuing with fresh optimizer.")
+
+            # Epoch and iteration info
+            start_epoch = checkpoint.get('epoch', resume_epoch + 1)
+            iteration = checkpoint.get('iteration', resume_epoch * len(loader))
+            print(f"Resuming from epoch {start_epoch}, iteration {iteration}.")
+
+
+        elif isinstance(checkpoint, dict):  
+            try:
+                model.load_state_dict(checkpoint)
+                print("✅ Model weights loaded from raw state_dict (old format).")
+            except Exception as e:
+                raise RuntimeError(f"❌ Failed to load old-format model weights: {e}")
+            
+            # Estimate epoch and iteration from provided resume_epoch   
+            start_epoch = resume_epoch + 1
+            iteration = resume_epoch * len(loader)
+            print(f"Resuming from epoch {start_epoch} based on `resume_epoch` param.")
+            print("⚠️ No optimizer, epoch, or iteration in checkpoint — using estimates.")
+            
+        else:
+            raise RuntimeError("❌ Checkpoint is not a valid state_dict or old-format dict.")
+
+    for epoch in range(start_epoch, n_epochs + 1):
         model.train()
         dur_losses = []
         prior_losses = []
@@ -171,5 +217,10 @@ if __name__ == "__main__":
                 save_plot(attn.squeeze().cpu(), 
                           f'{log_dir}/alignment_{i}.png')
 
-        ckpt = model.state_dict()
-        torch.save(ckpt, f=f"{log_dir}/grad_{epoch}.pt")
+        ckpt = {
+            'model': model.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'epoch': epoch,
+            'iteration': iteration
+        }
+        torch.save(ckpt, f"{log_dir}/grad_{epoch}.pt")

@@ -50,7 +50,30 @@ if __name__ == '__main__':
                         params.filter_channels_dp, params.n_heads, params.n_enc_layers,
                         params.enc_kernel, params.enc_dropout, params.window_size,
                         params.n_feats, params.dec_dim, params.beta_min, params.beta_max, params.pe_scale)
-    generator.load_state_dict(torch.load(args.checkpoint, map_location=lambda loc, storage: loc))
+ 
+    # Load the checkpoint   
+    checkpoint = torch.load(args.checkpoint, map_location='cuda')  # or 'cpu'
+
+    print(f"🔍 Checkpoint type: {type(checkpoint)}")
+
+    # Case 1: full dictionary with model key
+    if isinstance(checkpoint, dict):
+        if 'model' in checkpoint:
+            print("✅ Detected full checkpoint with 'model' key.")
+            generator.load_state_dict(checkpoint['model'])
+        else:
+            try:
+                print("⚠️ No 'model' key — trying to load directly into model.")
+                generator.load_state_dict(checkpoint)
+            except Exception as e:
+                raise RuntimeError(f"❌ Failed to load checkpoint as raw state_dict. Error: {e}")
+
+    # Case 2: something unexpected
+    else:
+        raise RuntimeError(f"❌ Unknown checkpoint format: {type(checkpoint)} — expected dict or state_dict.")
+
+
+    # generator.load_state_dict(torch.load(args.checkpoint, map_location=lambda loc, storage: loc))
     _ = generator.cuda().eval()
     print(f'Number of parameters: {generator.nparams}')
     
